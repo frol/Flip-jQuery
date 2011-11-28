@@ -3,9 +3,10 @@
  * @author Luca Manno (luca@smashup.it) [http://i.smashup.it]
  *              [Original idea by Nicola Rizzo (thanks!)]
  *
- * @version 0.9.9 [Nov. 2009]
+ * @version 0.9.9.1.[Nov. 2011]
  *
  * @changelog
+ * v 0.9.9.1    ->      Fix padding for blocks with padding. Fix action perfomed by a dontChangeColor option. [Vlad Frolov, Nov. 28, 2011]
  * v 0.9.9      ->      Fix transparency over non-colored background. Added dontChangeColor option.
  *                      Added $clone and $this parameters to on.. callback functions.
  *                      Force hexadecimal color values. Made safe for noConflict use.
@@ -159,12 +160,15 @@ $.fn.flip = function(settings){
 			.data('flipSettings',revertedSettings);
 
         flipObj = {
-            width: $this.width(),
-            height: $this.height(),
+            width: $this.outerWidth(),
+            height: $this.outerHeight(),
+            paddingTop: parseInt($this.css('padding-top'), 10),
+            paddingRight: parseInt($this.css('padding-right'), 10),
+            paddingBottom: parseInt($this.css('padding-bottom'), 10),
+            paddingLeft: parseInt($this.css('padding-left'), 10),
             bgColor: acceptHexColor(settings.bgColor) || $this.css("background-color"),
             fontSize: $this.css("font-size") || "12px",
             direction: settings.direction || "tb",
-            toColor: acceptHexColor(settings.color) || "#999",
             speed: settings.speed || 500,
             top: $this.offset().top,
             left: $this.offset().left,
@@ -175,6 +179,7 @@ $.fn.flip = function(settings){
             onEnd: settings.onEnd || function(){},
             onAnimation: settings.onAnimation || function(){}
         };
+        flipObj.toColor = (settings.dontChangeColor && flipObj.bgColor) || acceptHexColor(settings.color) || "#999";
 
         // This is the first part of a trick to support
         // transparent borders using chroma filter for IE6
@@ -186,7 +191,7 @@ $.fn.flip = function(settings){
 			.data('flipLock',1)
             .appendTo("body")
             .html("")
-            .css({visibility:"visible",position:"absolute",left:flipObj.left,top:flipObj.top,margin:0,zIndex:9999,"-webkit-box-shadow":"0px 0px 0px #000","-moz-box-shadow":"0px 0px 0px #000"});
+            .css({visibility:"visible",position:"absolute",left:flipObj.left,top:flipObj.top,margin:0,padding:0,zIndex:9999,"-webkit-box-shadow":"0px 0px 0px #000","-moz-box-shadow":"0px 0px 0px #000"});
 
         var defaultStart=function() {
             return {
@@ -320,9 +325,8 @@ $.fn.flip = function(settings){
         $clone.animate(dirOption.second,flipObj.speed);
 
         $clone.queue(function(){
-            if (!flipObj.dontChangeColor) {
+            if (!flipObj.dontChangeColor)
                 $this.css({backgroundColor: flipObj.toColor});
-            }
             $this.css({visibility: "visible"});
 
             var nC = newContent();
